@@ -1,0 +1,3 @@
+spring.application.name=netflix2
+server.port=2222
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration

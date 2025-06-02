@@ -1,0 +1,70 @@
+package com.netflix2.netflix2.jwt;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    private final Key key;
+    private final String secret;
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24시간
+
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.secret = secret;
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // ✅ 토큰 생성
+    public String generateToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key)
+                .compact();
+    }
+
+    // ✅ 토큰에서 username 추출
+    public String extractUsername(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            System.out.println("[JwtUtil] ❌ Failed to extract username: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // ✅ 토큰 유효성 검사 + 실패 원인 로그 출력
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (SecurityException e) {
+            System.out.println("[JwtUtil] 🚫 Invalid JWT signature.");
+        } catch (MalformedJwtException e) {
+            System.out.println("[JwtUtil] 🚫 Malformed JWT token.");
+        } catch (ExpiredJwtException e) {
+            System.out.println("[JwtUtil] ⏰ Expired JWT token.");
+        } catch (UnsupportedJwtException e) {
+            System.out.println("[JwtUtil] 🚫 Unsupported JWT token.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("[JwtUtil] 🚫 Illegal argument: token is null or empty.");
+        }
+        return false;
+    }
+}

@@ -1,0 +1,47 @@
+package com.netflix2.netflix2.controller;
+
+import com.netflix2.netflix2.entity.User;
+import com.netflix2.netflix2.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserService userService;
+
+    // ✅ 회원가입
+    @PostMapping("/signup")
+    public ResponseEntity<User> signup(@RequestBody User user) {
+        System.out.println("✅ 회원가입 요청 도착");
+        System.out.println(user); // 전체 객체 출력
+        User createdUser = userService.register(user);
+        return ResponseEntity.ok(createdUser);
+    }
+
+    // ✅ 회원 조회
+    @GetMapping("/{username}")
+    public ResponseEntity<User> getUser(@PathVariable String username) {
+        return ResponseEntity.ok(userService.findByUsername(username));
+    }
+
+    // ✅ 로그인
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User loginRequest) {
+        System.out.println("✅ 로그인 요청 도착: " + loginRequest.getUsername());
+
+        boolean isAuthenticated = userService.authenticate(
+            loginRequest.getUsername(), loginRequest.getPassword()
+        );
+
+        if (isAuthenticated) {
+            User user = userService.findByUsername(loginRequest.getUsername());
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.status(401).body("❌ 아이디 또는 비밀번호가 일치하지 않습니다");
+        }
+    }
+}

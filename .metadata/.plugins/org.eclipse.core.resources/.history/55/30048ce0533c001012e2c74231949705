@@ -1,0 +1,36 @@
+package com.netflix2.netflix2.controller;
+
+import com.netflix2.netflix2.entity.Post;
+import com.netflix2.netflix2.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate; // ✅ 추가
+import java.util.List;
+
+@RestController
+@RequestMapping("/posts")
+public class PostController {
+
+    @Autowired
+    private PostRepository postRepository;
+
+    // 게시글 저장
+    @PostMapping
+    public Post createPost(@RequestBody Post post) {
+        post.setDate(LocalDate.now().toString()); // ✅ 오늘 날짜 자동 입력
+        return postRepository.save(post);
+    }
+
+    // 게시글 전체 조회
+    @GetMapping
+    public List<Post> getAllPosts() {
+        return postRepository.findAll();
+    }
+
+    // 단일 게시글 조회
+    @GetMapping("/{id}")
+    public Post getPostById(@PathVariable Long id) {
+        return postRepository.findById(id).orElse(null);
+    }
+}
