@@ -14,6 +14,12 @@ import java.util.List;
 public class PostController {
 
     private final PostRepository postRepository;
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<Post>> searchPosts(@RequestParam String keyword) {
+        List<Post> result = postRepository.findByTitleContainingIgnoreCase(keyword);
+        return ResponseEntity.ok(result);
+    }
 
     // 게시글 등록
     @PostMapping
