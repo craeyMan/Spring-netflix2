@@ -1,0 +1,39 @@
+package com.netflix2.netflix2.controller;
+
+import com.netflix2.netflix2.service.LikeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/likes")
+@RequiredArgsConstructor
+public class LikeController {
+
+    private final LikeService likeService;
+
+    // 좋아요 확인
+    @GetMapping("/{movieId}")
+    public ResponseEntity<?> checkLike(@PathVariable String movieId, @AuthenticationPrincipal UserDetails user) {
+        boolean liked = likeService.hasUserLiked(user.getUsername(), movieId);
+        return ResponseEntity.ok(Map.of("liked", liked));
+    }
+
+    // 좋아요 추가
+    @PostMapping
+    public ResponseEntity<?> addLike(@RequestBody Map<String, String> body, @AuthenticationPrincipal UserDetails user) {
+        likeService.addLike(user.getUsername(), body.get("movieId"));
+        return ResponseEntity.ok().build();
+    }
+
+    // 좋아요 취소
+    @DeleteMapping("/{movieId}")
+    public ResponseEntity<?> removeLike(@PathVariable String movieId, @AuthenticationPrincipal UserDetails user) {
+        likeService.removeLike(user.getUsername(), movieId);
+        return ResponseEntity.ok().build();
+    }
+}

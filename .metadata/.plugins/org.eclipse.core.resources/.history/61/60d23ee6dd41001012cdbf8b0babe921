@@ -1,0 +1,31 @@
+package com.netflix2.netflix2.service;
+
+import com.netflix2.netflix2.entity.Like;
+import com.netflix2.netflix2.repository.LikeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class LikeService {
+
+    private final LikeRepository likeRepository;
+
+    public boolean hasUserLiked(String userId, String movieId) {
+        return likeRepository.findByUserIdAndMovieId(userId, movieId).isPresent();
+    }
+
+    public void addLike(String userId, String movieId) {
+        if (!hasUserLiked(userId, movieId)) {
+            likeRepository.save(new Like(null, userId, movieId));
+        }
+    }
+
+    public void removeLike(String userId, String movieId) {
+        likeRepository.deleteByUserIdAndMovieId(userId, movieId);
+    }
+
+    public long countLikes(String movieId) {
+        return likeRepository.countByMovieId(movieId);
+    }
+}

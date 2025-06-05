@@ -1,0 +1,24 @@
+package com.netflix2.netflix2.repository;
+
+import com.netflix2.netflix2.dto.LikeDTO;
+import com.netflix2.netflix2.entity.Like;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface LikeRepository extends CrudRepository<Like, Long> {
+
+    // ✅ Top10 조회
+    @Query("SELECT new com.netflix2.netflix2.dto.LikeDTO(l.movieId, COUNT(l)) " +
+           "FROM Like l GROUP BY l.movieId ORDER BY COUNT(l) DESC")
+    List<LikeDTO> findTop10ByMovieIdGroupByCount();
+
+    // ✅ 좋아요 여부 확인 (중복 방지용)
+    boolean existsByUserIdAndMovieId(String userId, String movieId);
+
+    // ✅ 좋아요 취소
+    void deleteByUserIdAndMovieId(String userId, String movieId);
+}

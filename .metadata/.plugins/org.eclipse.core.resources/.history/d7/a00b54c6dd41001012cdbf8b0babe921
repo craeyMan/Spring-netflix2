@@ -1,0 +1,12 @@
+package com.netflix2.netflix2.repository;
+
+import com.netflix2.netflix2.entity.Like;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface LikeRepository extends JpaRepository<Like, Long> {
+    Optional<Like> findByUserIdAndMovieId(String userId, String movieId);
+    void deleteByUserIdAndMovieId(String userId, String movieId);
+    long countByMovieId(String movieId);
+}

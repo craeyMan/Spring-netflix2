@@ -1,0 +1,19 @@
+package com.netflix2.netflix2.service;
+
+import com.netflix2.netflix2.dto.LikeDTO;
+import com.netflix2.netflix2.repository.LikeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class LikeService {
+    private final LikeRepository likeRepository;
+
+    public List<LikeDTO> getTop10LikedMovies() {
+        List<LikeDTO> result = likeRepository.findTop10ByMovieIdGroupByCount();
+        return result.size() > 10 ? result.subList(0, 10) : result;
+    }
+}
