@@ -1,0 +1,15 @@
+package com.netflix2.netflix2.repository;
+
+import com.netflix2.netflix2.entity.Comment;
+import com.netflix2.netflix2.entity.Post;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+    // ✅ 기존 전체 댓글 조회 (비사용 예정)
+    List<Comment> findByPostOrderByCreatedAtAsc(Post post);
+
+    // ✅ 현재 로그인한 사용자 기준으로 볼 수 있는 댓글만
+    List<Comment> findByPostAndVisibleToOrderByCreatedAtAsc(Post post, String visibleTo);
+}

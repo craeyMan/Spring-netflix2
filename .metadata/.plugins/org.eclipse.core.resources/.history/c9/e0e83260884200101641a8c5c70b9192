@@ -1,0 +1,36 @@
+package com.netflix2.netflix2.service;
+
+import com.netflix2.netflix2.entity.Comment;
+import com.netflix2.netflix2.entity.Post;
+import com.netflix2.netflix2.repository.CommentRepository;
+import com.netflix2.netflix2.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CommentService {
+
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
+
+    public List<Comment> getCommentsByPostId(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        return commentRepository.findByPostOrderByCreatedAtAsc(post);
+    }
+
+    public Comment createComment(Long postId, String author, String content) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        Comment comment = Comment.builder()
+                .post(post)
+                .author(author)
+                .content(content)
+                .build();
+        return commentRepository.save(comment);
+    }
+
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+}

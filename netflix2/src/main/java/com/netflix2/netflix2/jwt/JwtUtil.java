@@ -14,21 +14,30 @@ public class JwtUtil {
     private final long expirationTime = 1000 * 60 * 60 * 24; // 24시간 (ms)
 
     // ✅ 토큰 생성
-    public String createToken(String username) {
+    public String createToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("role", role) // ✅ 역할 정보 추가
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)
                 .compact();
     }
 
-    // ✅ 토큰에서 유저명 추출
+    // ✅ 유저명 추출
     public String getUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    // ✅ 역할(role) 추출
+    public String getRole(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
     }
 
     // ✅ 토큰 유효성 검사

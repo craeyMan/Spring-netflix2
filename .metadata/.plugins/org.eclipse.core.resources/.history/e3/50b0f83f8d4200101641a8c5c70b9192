@@ -1,0 +1,33 @@
+package com.netflix2.netflix2.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+    private String content;
+    private String author;
+
+    private LocalDateTime date;       // 작성자가 지정한 날짜 (예: 게시일)
+    private LocalDateTime createdAt;  // 실제 생성된 시간
+
+    // ✅ 비밀글 여부 - true면 관리자/작성자만 열람 가능
+    @Column(name = "is_secret")
+    private boolean isSecret;
+
+    // ✅ lombok이 자동 생성해주는 메서드들:
+    // public boolean isSecret();       ← getter
+    // public void setSecret(boolean); ← setter
+}

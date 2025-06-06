@@ -1,0 +1,81 @@
+package com.netflix2.netflix2.controller;
+
+import com.netflix2.netflix2.entity.Comment;
+import com.netflix2.netflix2.entity.Post;
+import com.netflix2.netflix2.service.CommentService;
+import com.netflix2.netflix2.service.PostService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/comments")
+@RequiredArgsConstructor
+public class CommentController {
+
+    private final CommentService commentService;
+    private final PostService postService;
+
+    // ✅ 댓글 조회: 관리자 또는 작성자만 가능 (비밀글일 경우)
+    @GetMapping("/{postId}")
+    public List<Comment> getComments(@PathVariable Long postId,
+                                     @AuthenticationPrincipal UserDetails user) {
+
+        Post post = postService.getPostById(postId);
+        String currentUser = user.getUsername();
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (post.isSecret()) {
+            if (!isAdmin && !currentUser.equals(post.getAuthor())) {
+                return List.of(); // 🔒 권한 없으면 빈 리스트
+            }
+        }
+
+        return commentService.getVisibleComments(postId, currentUser);
+    }
+
+    // ✅ 댓글 등록
+    @PostMapping
+    public Comment createComment(@RequestBody CommentRequest request,
+                                 @AuthenticationPrincipal UserDetails user) {
+
+        Post post = postService.getPostById(request.postId());
+        String currentUser = user.getUsername();
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        // 🔒 비밀글: 관리자 또는 작성자만 작성 가능
+        if (post.isSecret()) {
+            if (!isAdmin && !currentUser.equals(post.getAuthor())) {
+                throw new RuntimeException("비밀글에는 댓글을 작성할 수 없습니다.");
+            }
+        }
+
+        String role = isAdmin ? "ADMIN" : "USER";
+        String visibleTo = isAdmin ? post.getAuthor() : "admin";
+
+        return commentService.createCommentWithDetails(
+                post,
+                currentUser,
+                request.content(),
+                visibleTo,
+                request.parentId(),
+                role
+        );
+    }
+
+    @DeleteMapping("/{commentId}")
+    public void deleteComment(@PathVariable Long commentId) {
+        commentService.deleteComment(commentId);
+    }
+
+    public record CommentRequest(
+            Long postId,
+            String content,
+            Long parentId // 대댓글이면 상위 댓글 ID (null 가능)
+    ) {}
+}

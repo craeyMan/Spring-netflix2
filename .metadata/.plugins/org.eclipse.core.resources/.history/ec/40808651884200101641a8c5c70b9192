@@ -1,0 +1,33 @@
+package com.netflix2.netflix2.controller;
+
+import com.netflix2.netflix2.entity.Comment;
+import com.netflix2.netflix2.service.CommentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/comments")
+@RequiredArgsConstructor
+public class CommentController {
+
+    private final CommentService commentService;
+
+    @GetMapping("/{postId}")
+    public List<Comment> getComments(@PathVariable Long postId) {
+        return commentService.getCommentsByPostId(postId);
+    }
+
+    @PostMapping
+    public Comment createComment(@RequestBody CommentRequest request) {
+        return commentService.createComment(request.postId(), request.author(), request.content());
+    }
+
+    @DeleteMapping("/{commentId}")
+    public void deleteComment(@PathVariable Long commentId) {
+        commentService.deleteComment(commentId);
+    }
+
+    public record CommentRequest(Long postId, String author, String content) {}
+}

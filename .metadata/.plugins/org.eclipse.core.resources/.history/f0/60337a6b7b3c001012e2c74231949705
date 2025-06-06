@@ -1,9 +1,0 @@
-package com.netflix2.netflix2.repository;
-
-import com.netflix2.netflix2.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface UserRepository extends JpaRepository<User, Long> {
-    boolean existsByUsername(String username);
-    Optional<User> findByUsername(String username);
-}
