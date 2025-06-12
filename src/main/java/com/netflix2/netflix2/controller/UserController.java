@@ -3,13 +3,13 @@ package com.netflix2.netflix2.controller;
 import com.netflix2.netflix2.entity.User;
 import com.netflix2.netflix2.repository.UserRepository;
 import com.netflix2.netflix2.dto.LoginRequest;
-import com.netflix2.netflix2.jwt.JwtUtil; // ✅ 추가
+import com.netflix2.netflix2.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map; // ✅ JSON 응답용
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,9 +18,8 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil; // ✅ 추가
+    private final JwtUtil jwtUtil;
 
-    // ✅ 회원가입
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
@@ -28,11 +27,11 @@ public class UserController {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("USER");
         userRepository.save(user);
         return ResponseEntity.ok("회원가입 성공!");
     }
 
-    // ✅ 로그인 + JWT 발급
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
@@ -42,10 +41,8 @@ public class UserController {
             return ResponseEntity.status(401).body("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        // ✅ JWT 생성
-        String token = jwtUtil.createToken(user.getUsername());
+        String token = jwtUtil.createToken(user.getUsername(), user.getRole());
 
-        // ✅ JSON 응답
         return ResponseEntity.ok(Map.of("token", token));
     }
 }

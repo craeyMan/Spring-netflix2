@@ -27,4 +27,7 @@ public class User {
     private Integer birthMonth;
     private Integer birthDay;
     private String gender;
+
+    @Column(nullable = false)
+    private String role; 
 }

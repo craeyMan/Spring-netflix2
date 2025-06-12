@@ -32,7 +32,6 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // ✅ CORS 설정 명시적으로 등록 (Spring Security에서 인식되도록)
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
@@ -49,10 +48,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> {}) // ✅ CORS 설정 활성화
+            .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                .requestMatchers("/likes/top10", "/likes/{movieId}").permitAll()
+                .requestMatchers("/likes").authenticated()
+                .requestMatchers("/likes/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

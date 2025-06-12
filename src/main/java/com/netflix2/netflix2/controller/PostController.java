@@ -19,39 +19,60 @@ public class PostController {
 
     private final PostRepository postRepository;
 
-    // 🔍 게시글 검색
     @GetMapping("/search")
     public ResponseEntity<List<Post>> searchPosts(@RequestParam String keyword) {
         List<Post> result = postRepository.findByTitleContainingIgnoreCase(keyword);
         return ResponseEntity.ok(result);
     }
 
-    // 📝 게시글 등록
     @PostMapping
     public ResponseEntity<Post> createPost(
             @RequestBody Post post,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        post.setCreatedAt(LocalDateTime.now());
-        post.setAuthor(userDetails.getUsername()); // ✅ 작성자 저장
-        return ResponseEntity.ok(postRepository.save(post));
+        Post newPost = Post.builder()
+                .title(post.getTitle())
+                .content(post.getContent())
+                .author(userDetails.getUsername())
+                .createdAt(LocalDateTime.now().withNano(0))
+                .isSecret(post.isSecret())
+                .build();
+
+        return ResponseEntity.ok(postRepository.save(newPost));
     }
 
-    // 📄 전체 게시글 조회
     @GetMapping
     public ResponseEntity<List<Post>> getPosts() {
         return ResponseEntity.ok(postRepository.findAll());
     }
 
-    // 📌 게시글 1개 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Post> getPostById(@PathVariable Long id) {
-        return postRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> getPostById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("게시글을 찾을 수 없습니다.");
+        }
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String currentUser = userDetails.getUsername();
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (post.isSecret()) {
+            if (!post.getAuthor().equals(currentUser) && !isAdmin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("비밀글 접근 권한이 없습니다.");
+            }
+        }
+
+        return ResponseEntity.ok(post);
     }
 
-    // ✏️ 게시글 수정 (작성자만 가능)
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePost(
             @PathVariable Long id,
@@ -60,10 +81,6 @@ public class PostController {
     ) {
         return postRepository.findById(id)
                 .map(post -> {
-                    // ✅ 디버깅 로그 추가
-                    System.out.println("🔒 로그인 유저: " + userDetails.getUsername());
-                    System.out.println("📝 게시글 작성자: " + post.getAuthor());
-
                     if (!post.getAuthor().equals(userDetails.getUsername())) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .body("작성자만 수정할 수 있습니다.");
@@ -71,12 +88,12 @@ public class PostController {
 
                     post.setTitle(updatedPost.getTitle());
                     post.setContent(updatedPost.getContent());
+                    post.setSecret(updatedPost.isSecret());
                     return ResponseEntity.ok(postRepository.save(post));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 🗑️ 게시글 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postRepository.deleteById(id);

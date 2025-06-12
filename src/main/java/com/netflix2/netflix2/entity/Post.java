@@ -3,6 +3,7 @@ package com.netflix2.netflix2.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Getter
@@ -21,4 +22,8 @@ public class Post {
     private String author;
     private LocalDateTime date;
     private LocalDateTime createdAt;
+
+    @Column(name = "is_secret")
+    @JsonProperty("isSecret") 
+    private boolean isSecret;
 }
